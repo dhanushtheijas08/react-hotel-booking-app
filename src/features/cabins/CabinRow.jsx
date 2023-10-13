@@ -197,7 +197,7 @@ export default function CabinRow({ cabin }) {
     mutationKey: ["cabin"],
     mutationFn: (id) => deleteCabin(id),
     onSuccess: () => {
-      toast.success("Successfully toasted!");
+      toast.success("Successfully cabin deleted");
       queryClient.invalidateQueries({
         queryKey: ["cabin"],
       });
