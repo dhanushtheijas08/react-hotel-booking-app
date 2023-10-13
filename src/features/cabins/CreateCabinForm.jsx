@@ -1,5 +1,5 @@
-import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
 import { createCabin } from "../../services/apiCabins";
@@ -11,8 +11,11 @@ import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import FormRow from "./FormRow";
 
-function CreateCabinForm() {
-  const { register, handleSubmit, reset, getValues, formState } = useForm();
+function CreateCabinForm({ cabinToEdit = {} }) {
+  const { id: cabinEditId, ...cabinVal } = cabinToEdit;
+  const { register, handleSubmit, reset, getValues, formState } = useForm({
+    defaultValues: cabinEditId ? cabinVal : {},
+  });
   const { errors } = formState;
   const queryClient = useQueryClient();
   const { mutate, isLoading } = useMutation({
@@ -28,7 +31,8 @@ function CreateCabinForm() {
     },
   });
   const onFormSubmit = function (data) {
-    mutate(data);
+    const newData = { ...data, image: data.image[0] };
+    mutate(newData);
   };
   const onFormError = function (err) {
     // console.log(err);
@@ -49,12 +53,9 @@ function CreateCabinForm() {
         />
       </FormRow>
 
-      <FormRow
-        disabled={isLoading}
-        label="Maximum capacity"
-        error={errors?.maxCapacity?.message}
-      >
+      <FormRow label="Maximum capacity" error={errors?.maxCapacity?.message}>
         <Input
+          disabled={isLoading}
           type="number"
           id="maxCapacity"
           {...register("maxCapacity", {
@@ -70,12 +71,9 @@ function CreateCabinForm() {
         />
       </FormRow>
 
-      <FormRow
-        disabled={isLoading}
-        label="Regular price"
-        error={errors?.regularPrice?.message}
-      >
+      <FormRow label="Regular price" error={errors?.regularPrice?.message}>
         <Input
+          disabled={isLoading}
           type="number"
           id="regularPrice"
           {...register("regularPrice", {
@@ -87,12 +85,9 @@ function CreateCabinForm() {
         />
       </FormRow>
 
-      <FormRow
-        disabled={isLoading}
-        label="Discount"
-        error={errors?.discount?.message}
-      >
+      <FormRow label="Discount" error={errors?.discount?.message}>
         <Input
+          disabled={isLoading}
           type="number"
           id="discount"
           defaultValue={0}
@@ -103,7 +98,7 @@ function CreateCabinForm() {
             },
             validate: (val) => {
               return (
-                val <= getValues().regularPrice ||
+                parseInt(val) <= parseInt(getValues().regularPrice) ||
                 "Discount price must less than regular price"
               );
             },
@@ -112,11 +107,11 @@ function CreateCabinForm() {
       </FormRow>
 
       <FormRow
-        disabled={isLoading}
         label="Description for website"
         error={errors?.description?.message}
       >
         <Textarea
+          disabled={isLoading}
           type="number"
           id="description"
           defaultValue=""
@@ -124,19 +119,27 @@ function CreateCabinForm() {
         />
       </FormRow>
 
-      <FormRow
-        disabled={isLoading}
-        label="Cabin photo"
-        error={errors?.image?.message}
-      >
-        <FileInput id="image" accept="image/*" {...register("image")} />
+      <FormRow label="Cabin photo" error={errors?.image?.message}>
+        <FileInput
+          disabled={isLoading}
+          id="image"
+          accept="image/*"
+          {...register("image", {
+            required: {
+              value: cabinEditId ? false : true,
+              message: "Image is required",
+            },
+          })}
+        />
       </FormRow>
 
       <FormRow>
         <Button variation="secondary" type="reset">
           Cancel
         </Button>
-        <Button disabled={isLoading}>Add cabin</Button>
+        <Button disabled={isLoading}>
+          {cabinEditId ? "Edit Cabin" : "Add cabin"}
+        </Button>
       </FormRow>
     </Form>
   );
