@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
-import { createCabin } from "../../services/apiCabins";
+import { createCabin, editCabin } from "../../services/apiCabins";
 
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
@@ -30,9 +30,35 @@ function CreateCabinForm({ cabinToEdit = {} }) {
       toast.error(err.message);
     },
   });
+
+  const { mutate: toEdit, isLoading: isEditing } = useMutation({
+    mutationKey: ["cabin"],
+    mutationFn: ({ data, id, isOldImage }) => editCabin(data, id, isOldImage),
+    onSuccess: () => {
+      toast.success("Successfully cabin created");
+      queryClient.invalidateQueries({ queryKey: ["cabin"] });
+      reset();
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
+
   const onFormSubmit = function (data) {
-    const newData = { ...data, image: data.image[0] };
-    mutate(newData);
+    if (!cabinEditId) {
+      const newData = { ...data, image: data.image[0] };
+      mutate(newData);
+    } else {
+      const imageData =
+        typeof data.image === "string" ? data.image : data.image[0];
+
+      const newData = { ...data, image: imageData };
+      toEdit({
+        data: newData,
+        id: cabinEditId,
+        isOldImage: typeof data.image === "string" ? true : false,
+      });
+    }
   };
   const onFormError = function (err) {
     // console.log(err);

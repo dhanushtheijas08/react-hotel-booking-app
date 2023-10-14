@@ -8,6 +8,7 @@ export async function getCabin() {
   }
   return data;
 }
+
 export async function deleteCabin(id) {
   const { error } = await supabase.from("cabins").delete().eq("id", id);
   if (error) {
@@ -40,5 +41,37 @@ export async function createCabin(cabinData) {
 
     console.error(error);
     throw new Error("Cabin image could not be stored");
+  }
+}
+
+export async function editCabin(cabinData, id, isOldImage) {
+  let imagePath, imageName;
+  if (!isOldImage) {
+    imageName = `${Math.random() * 10000}-${cabinData.image.name}`.replace(
+      "/",
+      ""
+    );
+    imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
+  }
+
+  const { data, error } = await supabase
+    .from("cabins")
+    .update({ ...cabinData, image: isOldImage ? cabinData.image : imagePath })
+    .eq("id", id)
+    .select();
+  if (error) {
+    console.error(error);
+    throw new Error("Cabin could not be created");
+  }
+  if (!isOldImage) {
+    const { _, error: storageError } = await supabase.storage
+      .from("cabin-images")
+      .upload(imageName, cabinData.image);
+    if (storageError) {
+      await supabase.from("cabins").delete().eq("id", data.id);
+
+      console.error(error);
+      throw new Error("Cabin image could not be stored");
+    }
   }
 }
