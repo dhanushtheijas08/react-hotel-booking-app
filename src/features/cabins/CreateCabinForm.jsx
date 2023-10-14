@@ -1,8 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
 
-import { createCabin, editCabin } from "../../services/apiCabins";
+import { useEditcabin } from "./useEditcabin";
+import { useCreateCabin } from "./useCreateCabin";
 
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
@@ -17,43 +16,19 @@ function CreateCabinForm({ cabinToEdit = {} }) {
     defaultValues: cabinEditId ? cabinVal : {},
   });
   const { errors } = formState;
-  const queryClient = useQueryClient();
-  const { mutate, isLoading } = useMutation({
-    mutationKey: ["cabin"],
-    mutationFn: (data) => createCabin(data),
-    onSuccess: () => {
-      toast.success("Successfully cabin created");
-      queryClient.invalidateQueries({ queryKey: ["cabin"] });
-      reset();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
-  const { mutate: toEdit, isLoading: isEditing } = useMutation({
-    mutationKey: ["cabin"],
-    mutationFn: ({ data, id, isOldImage }) => editCabin(data, id, isOldImage),
-    onSuccess: () => {
-      toast.success("Successfully cabin created");
-      queryClient.invalidateQueries({ queryKey: ["cabin"] });
-      reset();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
+  const { createCabinRow, isCreating } = useCreateCabin();
+  const { editCabinRow: editCabin, isEditing } = useEditcabin();
+  let isLoading = isCreating || isEditing;
   const onFormSubmit = function (data) {
     if (!cabinEditId) {
       const newData = { ...data, image: data.image[0] };
-      mutate(newData);
+      createCabinRow(newData);
     } else {
       const imageData =
         typeof data.image === "string" ? data.image : data.image[0];
 
       const newData = { ...data, image: imageData };
-      toEdit({
+      editCabin({
         data: newData,
         id: cabinEditId,
         isOldImage: typeof data.image === "string" ? true : false,
