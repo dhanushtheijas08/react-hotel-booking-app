@@ -16,23 +16,28 @@ function CreateCabinForm({ cabinToEdit = {} }) {
     defaultValues: cabinEditId ? cabinVal : {},
   });
   const { errors } = formState;
-  const { createCabinRow, isCreating } = useCreateCabin();
+  const { createCabinRow: createCabin, isCreating } = useCreateCabin();
   const { editCabinRow: editCabin, isEditing } = useEditcabin();
   let isLoading = isCreating || isEditing;
   const onFormSubmit = function (data) {
     if (!cabinEditId) {
-      const newData = { ...data, image: data.image[0] };
-      createCabinRow(newData);
+      createCabin(
+        { ...data, image: data.image[0] },
+        { onSuccess: () => reset() }
+      );
     } else {
       const imageData =
         typeof data.image === "string" ? data.image : data.image[0];
 
       const newData = { ...data, image: imageData };
-      editCabin({
-        data: newData,
-        id: cabinEditId,
-        isOldImage: typeof data.image === "string" ? true : false,
-      });
+      editCabin(
+        {
+          data: newData,
+          id: cabinEditId,
+          isOldImage: typeof data.image === "string" ? true : false,
+        },
+        { onSuccess: () => reset() }
+      );
     }
   };
   const onFormError = function (err) {
