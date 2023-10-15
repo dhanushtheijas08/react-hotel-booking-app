@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
 import { HiXMark } from "react-icons/hi2";
+import { createPortal } from "react-dom";
 const StyledModal = styled.div`
   position: fixed;
   top: 50%;
@@ -51,7 +52,7 @@ const Button = styled.button`
 `;
 
 export default function Modal({ children, closeModal }) {
-  return (
+  return createPortal(
     <Overlay>
       <StyledModal>
         <Button onClick={closeModal}>
@@ -59,6 +60,7 @@ export default function Modal({ children, closeModal }) {
         </Button>
         <div>{children}</div>
       </StyledModal>
-    </Overlay>
+    </Overlay>,
+    document.body
   );
 }
